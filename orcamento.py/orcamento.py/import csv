@@ -1,0 +1,108 @@
+
+import csv
+
+class Imovel:
+    def __init__(self, tipo, quartos, garagem=False):
+        self.tipo = tipo
+        self.quartos = quartos
+        self.garagem = garagem
+        self.valor_base = 0
+        self.valor_garagem = 0
+        self.valor_mensal = 0
+
+    def calcular_valor_base(self):
+        pass
+
+    def calcular_valor_garagem(self):
+        pass
+
+    def calcular_valor_mensal(self):
+        self.calcular_valor_base()
+        self.calcular_valor_garagem()
+        self.valor_mensal = self.valor_base + self.valor_garagem
+
+class Apartamento(Imovel):
+    def __init__(self, quartos, garagem=False, tem_criancas=True):
+        super().__init__("Apartamento", quartos, garagem)
+        self.tem_criancas = tem_criancas
+
+    def calcular_valor_base(self):
+        self.valor_base = 700 * self.quartos
+        if self.quartos > 1:
+            self.valor_base += 200
+        if not self.tem_criancas:
+            self.valor_base *= 0.95  # Desconto de 5%
+
+    def calcular_valor_garagem(self):
+        if self.garagem:
+            self.valor_garagem = 300
+
+class Casa(Imovel):
+    def __init__(self, quartos, garagem=False):
+        super().__init__("Casa", quartos, garagem)
+
+    def calcular_valor_base(self):
+        self.valor_base = 900 * self.quartos
+        if self.quartos > 1:
+            self.valor_base += 250
+
+    def calcular_valor_garagem(self):
+        if self.garagem:
+            self.valor_garagem = 300
+
+class Estudio(Imovel):
+    def __init__(self, vagas_extra=0):
+        super().__init__("Estudio", 0, garagem=True)
+        self.vagas_extra = vagas_extra
+
+    def calcular_valor_base(self):
+        self.valor_base = 1200
+
+    def calcular_valor_garagem(self):
+        self.valor_garagem = 250 + (60 * self.vagas_extra)
+
+class Orcamento:
+    def __init__(self, imovel):
+        self.imovel = imovel
+        self.valor_contrato = 2000
+        self.parcelas_contrato = 5
+
+    def gerar_orcamento(self):
+        self.imovel.calcular_valor_mensal()
+        valor_parcela_contrato = self.valor_contrato / self.parcelas_contrato
+        return {
+            "valor_mensal": self.imovel.valor_mensal,
+            "valor_contrato": self.valor_contrato,
+            "parcelas_contrato": self.parcelas_contrato,
+            "valor_parcela_contrato": valor_parcela_contrato,
+        }
+
+    def gerar_csv(self, nome_arquivo="orcamento.csv"):
+        orcamento = self.gerar_orcamento()
+        with open(nome_arquivo, "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Mês", "Valor Aluguel", "Parcela Contrato"])
+            for mes in range(1, 13):
+                writer.writerow([
+                    f"Mês {mes}",
+                    orcamento["valor_mensal"],
+                    orcamento["valor_parcela_contrato"] if mes <= self.parcelas_contrato else 0
+                ])
+
+# Exemplo 1: Apartamento com 2 quartos, garagem e sem crianças
+apartamento = Apartamento(quartos=2, garagem=True, tem_criancas=False)
+orcamento_ap = Orcamento(apartamento)
+print("Orçamento Apartamento:", orcamento_ap.gerar_orcamento())
+orcamento_ap.gerar_csv("orcamento_apartamento.csv")
+
+# Exemplo 2: Casa com 1 quarto e garagem
+casa = Casa(quartos=1, garagem=True)
+orcamento_casa = Orcamento(casa)
+print("Orçamento Casa:", orcamento_casa.gerar_orcamento())
+orcamento_casa.gerar_csv("orcamento_casa.csv")
+
+# Exemplo 3: Estúdio com 2 vagas extras
+estudio = Estudio(vagas_extra=2)
+orcamento_estudio = Orcamento(estudio)
+print("Orçamento Estúdio:", orcamento_estudio.gerar_orcamento())
+orcamento_estudio.gerar_csv("orcamento_estudio.csv")
